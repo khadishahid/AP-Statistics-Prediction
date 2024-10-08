@@ -1,0 +1,331 @@
+------------------------------------------------------------------------
+
+# Project Overview
+
+This project aims to analyze student data to predict their scores on the AP Statistics exam based on their PSAT scores. The dataset includes students' PSAT scores and their actual AP exam scores. The analysis will involve data cleaning, exploratory data analysis, and visualization.
+
+## Contents
+
+1.  [Data Loading](#data-loading)
+
+2.  [Exploratory Data Analysis](#exploratory-data-analysis)
+
+3.  [Data Cleaning](#data-cleaning)
+
+4.  [Visualizations](#visualizations)
+
+5.  [Conclusion](#conclusion)
+
+# Data Loading {#data-loading}
+
+```{r}
+# Clear the environment
+rm(list = ls())
+
+# Load the data
+apdata <- read.csv("APprediction.csv", stringsAsFactors = TRUE)
+
+# Ensure ID variable is a factor
+apdata$ID <- as.factor(apdata$ID)
+```
+
+------------------------------------------------------------------------
+
+# Structure of the Dataset
+
+```{r}
+# Displaying the dimensions of the dataset
+dataset_dimensions <- dim(apdata)
+dataset_dimensions
+
+```
+
+## Summary of Students' AP Exam Scores
+
+The variable `ACTUAL` represents the actual Advanced Placement (AP) Statistics exam scores of the students. This end-of-course exam assesses various statistical concepts. A score of 3, 4, or 5 indicates that a student has "passed" the exam and may qualify for college credit, whereas scores of 1 and 2 are not considered passing.
+
+In this section, we will provide a summary of the students' actual AP exam scores, which will serve as our dependent variable (response variable) for predicting future scores based on their PSAT data.
+
+```{r}
+summary_ap_scores <- summary(apdata$ACTUAL)
+
+summary_ap_scores
+
+```
+
+## Distribution of Students' Actual AP Exam Scores
+
+This section presents a table summarizing the distribution of actual Advanced Placement (AP) Statistics exam scores among students. It is important to note that if a student did not take the exam, their score was recorded as zero (0). These students will be excluded from further analysis in this assignment to ensure accurate predictions and insights.
+
+```{r}
+
+score_distribution <- table(apdata$ACTUAL)
+
+
+score_distribution
+
+```
+
+The output shows the distribution of actual AP exam scores among students:
+
+0: 9 students did not take the exam (score of 0). 1: 5 students scored 1. 2: 12 students scored 2. 3: 41 students scored 3 (considered a passing score). 4: 65 students scored 4, indicating strong performance. 5: 88 students scored 5, reflecting excellent understanding of the material. Overall, most students performed well, with a significant majority scoring 3 or higher, which suggests effective preparation and understanding of AP Statistics. The 9 students who scored zero will be excluded from further analysis to ensure accuracy in predictions.
+
+## Summary of Students' PSAT Scores
+
+In this section, we provide a summary of students' PSAT scores, which will be used as a predictor for their actual Advanced Placement (AP) exam scores. The PSAT is a standardized test assessing math, reading, and writing skills, typically administered to high school juniors. Understanding the distribution of these scores will help us gauge their potential performance on the AP exam.
+
+```{r}
+
+psat_summary <- summary(apdata$PSAT)
+
+
+psat_summary
+```
+
+The output provides a summary of the PSAT scores in the dataset. Here’s what each statistic means:
+
+Min: The minimum PSAT score is 127, indicating the lowest score recorded among students.
+
+1st Qu. (First Quartile): The first quartile is 970, meaning that 25% of students scored below this value. This represents the lower end of the score distribution.
+
+Median: The median score is 1140, which indicates that half of the students scored below this value. It serves as a measure of the central tendency of the scores.
+
+Mean: The average PSAT score is 999. This value is calculated by summing all PSAT scores and dividing by the total number of students with scores. It can be influenced by extreme values.
+
+3rd Qu. (Third Quartile): The third quartile is 1290, meaning that 75% of students scored below this value. This represents the higher end of the score distribution.
+
+Max: The maximum PSAT score is 1510, indicating the highest score recorded among students.
+
+NA's: There are 65 missing values (NAs) for PSAT scores, indicating that 65 students did not have a recorded score.
+
+This summary suggests a wide range of PSAT scores among students, with a significant number of students achieving scores in the higher ranges. The presence of missing values should be addressed in subsequent analyses to ensure accurate predictions and insights.
+
+## Count of Students with Missing PSAT Scores
+
+In this section, we assess the number of students who have missing PSAT scores in our dataset. Identifying missing values is crucial for understanding the data's completeness, and we will address these missing values in subsequent analyses.
+
+```{r}
+
+missing_psat_count <- sum(is.na(apdata$PSAT))
+
+
+missing_psat_count
+```
+
+------------------------------------------------------------------------
+
+# Part 2: Visualize Variables of Interest
+
+## Horizontal Boxplot of PSAT Scores
+
+In this section, we create a horizontal boxplot to visualize the distribution of students' PSAT scores. This boxplot will help identify the central tendency, variability, and potential outliers in the PSAT scores.
+
+```{r}
+
+# Create the horizontal boxplot
+boxplot(apdata$PSAT, horizontal = TRUE, xlab = "PSAT Scores")
+
+```
+
+The boxplot reveals significant insights into the distribution of AP exam scores:
+
+Whisker Boundaries: The left whisker is at 900, while the right whisker extends beyond 1400, indicating a wide range of scores. Outliers: Several outliers are present in the 200s, suggesting that a small number of students scored significantly lower than the majority. Performance Variability: Most students performed well, but the presence of extreme low scores indicates variability and potential issues, such as data entry errors or inadequate preparation. Impact on Analysis: These outliers may influence statistical analyses, particularly measures like mean and standard deviation, and warrant further investigation. Overall, the boxplot highlights both strong performance among most students and the need to understand the causes of the low outliers.
+
+## Histogram of Actual AP Scores
+
+In this section, we create a histogram to visualize the distribution of students' actual AP exam scores. This histogram will help us understand the frequency of each score range.
+
+```{r}
+# Create the histogram of actual AP scores
+hist(apdata$ACTUAL, xlab = "Actual AP Exam Scores", main = "Histogram of Actual AP Exam Scores")
+
+```
+
+Zero Scores: There are a significant number of students (9) who scored exactly 0, indicating that they did not take the AP exam. Low Scores: The frequency is relatively low for scores of 0.5 (5 students) and 1.5 (12 students), suggesting few students scored in those ranges. Mid to High Scores: There is a noticeable increase in frequency for scores in the ranges of 2.5 (41 students) and especially 3.5 (65 students) and 4.5 (88 students), indicating that a large portion of students performed well on the AP exam. No Scores in Certain Ranges: There are no students with scores in the ranges of 1.0 - 1.5, 2.0 - 2.5, 3.0 - 3.5, or 4.0 - 4.5, suggesting that these score ranges are unrepresented in the dataset. Overall, the data indicates that most students performed well on the AP exam, as evidenced by the high frequencies in the higher score ranges.
+
+## Histogram of PSAT Scores
+
+In this section, we create a histogram to visualize the distribution of students' PSAT scores. This histogram will help us understand the frequency of each score range.
+
+```{r}
+# Create the histogram of PSAT scores
+hist(apdata$PSAT, xlab = "PSAT Scores", main = "Histogram of PSAT Scores")
+
+```
+
+Low Scores: There is a significant number of students (29) who scored between 0 and just below 200, indicating a potential lack of preparation or participation. Very Few Low Scores: Only 2 students scored between 200 and 400, suggesting that very few students performed at this low level. No Scores in Certain Ranges: There are no students with scores between 400 and 800, indicating that these score ranges are unrepresented in the dataset. Moderate to High Scores: There are 13 students in the 800-1000 range. A notable number of students scored between 1000 and 1200 (50 students) and between 1200 and 1400 (44 students). There are also 17 students who scored 1400 or above, indicating that some students achieved very high scores. Overall Interpretation This distribution suggests that while a significant number of students did not perform well (scores below 800), there is also a good number of students who performed well, particularly in the ranges above 1000. The absence of scores between 400 and 800 could suggest that students either performed poorly or did not take the exam at all. This data indicates a bimodal distribution where there are clusters of students at both low and high score ranges.
+
+------------------------------------------------------------------------
+
+## Identifying Missing PSAT Scores
+
+In this section, we will identify the indices of students who do not have a PSAT score recorded (indicated as NAs). These indices will be stored in a vector called `NA_PSAT_index`.
+
+```{r}
+# Identify indices of students with missing PSAT scores
+NA_PSAT_index <- which(is.na(apdata$PSAT))
+
+NA_PSAT_index
+
+```
+
+The complete list of indices indicates that the following students have missing PSAT scores:
+
+Rows 1 through 39: This includes students from rows 1 to 40 (excluding row 41) and then jumps to rows 47 through 60, as well as 74, 78, 79, 104, 105, 111, 118, 127, 132, 136, 138, 139, and 150. Gaps in the List: For example, there are no missing PSAT scores for students in rows 41 to 46 and 49.
+
+## Storing Students with Missing PSAT Scores
+
+In this section, we will create a data frame containing all the students who do not have a PSAT score recorded, using the `NA_PSAT_index` vector. We will then view only the PSAT and ACTUAL columns and store this edited data frame in `missing_PSAT_scores`.
+
+```{r}
+# Store data frame of students without PSAT scores
+missing_PSAT_scores <- apdata[NA_PSAT_index, c('PSAT', 'ACTUAL')]
+
+missing_PSAT_scores
+```
+
+## Storing Students with Recorded PSAT Scores
+
+In this section, we will create a data frame containing all the students who do have a PSAT score recorded, using the `NA_PSAT_index` vector. We will then view only the PSAT and ACTUAL columns and store this edited data frame as `apdata_PSATnoNA`.
+
+```{r}
+# Store data frame of students with PSAT scores
+apdata_PSATnoNA <- apdata[-NA_PSAT_index, c("PSAT", "ACTUAL")]
+
+apdata_PSATnoNA
+
+```
+
+------------------------------------------------------------------------
+
+## Counting Zero AP Exam Scores
+
+In this section, we will count how many rows in the `apdata_PSATnoNA` dataframe have zeros for the actual AP exam score. These zeros indicate that the students did not take the AP exam.
+
+```{r}
+# Count rows with zero AP exam scores
+zero_scores_count <- sum(apdata_PSATnoNA$ACTUAL == 0)
+
+zero_scores_count
+
+```
+
+## Creating a Data Frame of Valid AP Exam Scores
+
+We will create a new data frame, `apdata_valid_apscores`, that includes only the rows where the actual AP exam score is greater than or equal to 1. This will filter out any zero scores.
+
+```{r}
+# Create a data frame with valid AP exam scores
+apdata_valid_apscores <- apdata_PSATnoNA[apdata_PSATnoNA$ACTUAL >= 1, c("PSAT", "ACTUAL")]
+
+
+dim(apdata_valid_apscores)
+```
+
+## Final Cleaning of the Data Frame
+
+We will filter the `apdata_valid_apscores` data frame to include only rows where the PSAT score is greater than 300 and the ACTUAL score is between 1 and 5. This will ensure that we have a clean dataset for further analysis.
+
+```{r}
+# Clean the data frame to include only valid PSAT and ACTUAL scores
+apdata_clean <- apdata_valid_apscores[
+  apdata_valid_apscores$PSAT > 300 & 
+  apdata_valid_apscores$ACTUAL >= 1 & 
+  apdata_valid_apscores$ACTUAL <= 5, 
+]
+
+dim(apdata_clean)
+```
+
+------------------------------------------------------------------------
+
+## Linear Model for Predicting AP Exam Score
+
+In this section, we will create a linear model to predict the actual AP exam score based on the student's PSAT score using the `apdata_clean` dataset.
+
+```{r}
+# Create a linear model predicting ACTUAL based on PSAT scores
+mod1 <- lm(ACTUAL ~ PSAT, data = apdata_clean)
+
+# View the rounded coefficients of the model
+rounded_coefficients <- round(coefficients(mod1), 5)
+rounded_coefficients
+
+```
+
+Positive Relationship: The positive slope indicates that higher PSAT scores are associated with higher AP exam scores, though the effect size is relatively small.
+
+Predictions: Using this model, you can predict a student's AP exam score based on their PSAT score. For example, a student with a PSAT score of 1000 would have a predicted AP exam score of:
+
+## Predicting AP Score for the First Student
+
+In this section, we will use the `predict` function to estimate the actual AP exam score for the student in the first row of the `apdata_clean` dataset.
+
+```{r}
+
+# Predict the actual AP exam score for the first student
+predicted_score_first_student <- predict(mod1, newdata = apdata_clean[1, ])
+
+# View the predicted score
+predicted_score_first_student
+
+```
+
+This value represents the expected AP exam score based on the student's PSAT score as calculated by the linear model. Given that AP exam scores range from 1 to 5, the model predicts a score slightly above 5 for this particular student, which could be rounded down to 5, the highest possible score on the exam.
+
+This indicates that the student's PSAT score strongly correlates with their predicted AP exam score according to the model.
+
+## Regression Summary for the Linear Model
+
+We will generate a regression summary of the linear model predicting the actual AP exam score based on the student's PSAT score, using the `apdata_clean` dataset.
+
+```{r}
+# Create the regression summary of the linear model
+regression_summary <- summary(mod1)
+
+# Extract the standard deviation of the residuals and the coefficient of determination
+sigma_residuals <- regression_summary$sigma
+r_squared <- regression_summary$r.squared
+
+# View the relevant outputs
+list(sigma = sigma_residuals, r_squared = r_squared)
+```
+
+Sigma (Standard Deviation of Residuals): 0.7453829. This tells you how much the predicted AP scores differ from the actual scores on average. A lower value indicates more accurate predictions, and in this case, the residuals (errors) are relatively small.
+
+R-squared: 0.4916168. This is the coefficient of determination, which explains how much of the variance in the actual AP exam scores is explained by the PSAT scores. An R-squared value of 0.49 means that about 49% of the variability in the AP scores can be explained by the model, suggesting a moderate fit.
+
+## Correlation Between PSAT Scores and AP Exam Scores
+
+Next, we will calculate the correlation between the actual AP exam score and a student's PSAT score in the `apdata_clean` dataset.
+
+```{r}
+# Calculate the correlation between PSAT scores and actual AP exam scores
+correlation_PSAT_ACTUAL <- cor(apdata_clean$PSAT, apdata_clean$ACTUAL)
+
+# View the correlation result
+correlation_PSAT_ACTUAL
+
+```
+
+The correlation value of 0.7011539 indicates a strong positive relationship between PSAT scores and actual AP exam scores. This suggests that students who perform well on the PSAT tend to also score higher on the AP exam, though it's not a perfect relationship (which would be closer to 1).
+
+In practical terms, this correlation shows that there's a significant association between these two exam scores, making PSAT a good predictor of AP exam performance in your dataset.
+
+------------------------------------------------------------------------
+
+# Conclusion {#conclusion}
+
+This analysis explored the relationship between students' PSAT scores and their actual AP exam scores, using the cleaned apdata_clean dataset. Here are the key findings:
+
+Data Cleaning: We identified and handled missing values in the PSAT scores and excluded students with invalid data. We also filtered out students with PSAT scores less than 300, which were deemed data entry errors.
+
+Linear Model: A linear regression model was created to predict students' AP exam scores based on their PSAT scores. The model's coefficients indicated that for every point increase in the PSAT score, the AP exam score is expected to increase by approximately 0.0048.
+
+Model Performance: The model summary showed a standard deviation of residuals (sigma) of 0.745 and an R-squared value of 0.492. This means that nearly 49% of the variability in AP scores can be explained by the students' PSAT scores. While the model does explain a good portion of the variability, there is still room for improvement or other factors that may influence AP scores.
+
+Correlation: The correlation between PSAT scores and AP exam scores was found to be 0.701, indicating a strong positive relationship. This suggests that PSAT scores are a reliable predictor of AP exam performance, although not the only factor influencing it.
+
+Overall Conclusion: The findings demonstrate that students' PSAT scores can provide valuable insights into their likely performance on the AP exam. While the correlation is strong, and the linear model explains nearly half of the variability, there are still other factors not captured in this analysis that may affect AP scores. Further investigation into additional variables or using more advanced modeling techniques could improve predictions.
+
+------------------------------------------------------------------------
